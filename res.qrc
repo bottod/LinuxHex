@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Source/image/app.png</file>
+        <file>Source/image/find.png</file>
+        <file>Source/image/open.png</file>
+        <file>Source/image/quit.png</file>
+        <file>Source/image/redo.png</file>
+        <file>Source/image/save.png</file>
+        <file>Source/image/undo.png</file>
+        <file>Source/stylesheet/TitleBar.qss</file>
+        <file>Source/image/close.png</file>
+        <file>Source/image/close_hover.png</file>
+        <file>Source/image/line.png</file>
+        <file>Source/image/maximum.png</file>
+        <file>Source/image/maximum_cancel.png</file>
+        <file>Source/image/maximum_cancel_hover.png</file>
+        <file>Source/image/maximum_hover.png</file>
+        <file>Source/image/minimum.png</file>
+        <file>Source/image/minimum_hover.png</file>
+        <file>Source/image/set.png</file>
+        <file>Source/image/set_hover.png</file>
+        <file>Source/stylesheet/StatusBar.qss</file>
+    </qresource>
+</RCC>

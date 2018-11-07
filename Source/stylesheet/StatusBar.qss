@@ -1,0 +1,6 @@
+QStatusBar
+{
+    background:rgb(102,183,255);
+    border-bottom-left-radius:15px;
+    border-bottom-right-radius:15px;
+}
