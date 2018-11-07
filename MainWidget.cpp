@@ -178,13 +178,14 @@ void MainWidget::init()
     setAcceptDrops(true);
 
     initOtherWidget();
-    readSettings();
 
     initSystemTray();
     initAction();
     initMenu();
 
     initLayout();
+
+    readSettings();
 }
 
 void MainWidget::TrayActivated(QSystemTrayIcon::ActivationReason reason)
