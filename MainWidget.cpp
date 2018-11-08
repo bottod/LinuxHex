@@ -308,19 +308,19 @@ void MainWidget::readSettings()
     move(pos);
     resize(size);
 
-    hexEdit->setAddressArea(settings.value("AddressArea").toBool());
-    hexEdit->setAsciiArea(settings.value("AsciiArea").toBool());
-    hexEdit->setHighlighting(settings.value("Highlighting").toBool());
-    hexEdit->setOverwriteMode(settings.value("OverwriteMode").toBool());
-    hexEdit->setReadOnly(settings.value("ReadOnly").toBool());
+    hexEdit->setAddressArea(settings.value("AddressArea",true).toBool());
+    hexEdit->setAsciiArea(settings.value("AsciiArea",true).toBool());
+    hexEdit->setHighlighting(settings.value("Highlighting",true).toBool());
+    hexEdit->setOverwriteMode(settings.value("OverwriteMode",true).toBool());
+    hexEdit->setReadOnly(settings.value("ReadOnly",false).toBool());
 
-    hexEdit->setHighlightingColor(settings.value("HighlightingColor").value<QColor>());
-    hexEdit->setAddressAreaColor(settings.value("AddressAreaColor").value<QColor>());
-    hexEdit->setSelectionColor(settings.value("SelectionColor").value<QColor>());
-    hexEdit->setFont(settings.value("WidgetFont").value<QFont>());
+    hexEdit->setHighlightingColor(settings.value("HighlightingColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+    hexEdit->setAddressAreaColor(settings.value("AddressAreaColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+    hexEdit->setSelectionColor(settings.value("SelectionColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+    hexEdit->setFont(settings.value("WidgetFont",QFont("Monospace", 10)).value<QFont>());
 
-    hexEdit->setAddressWidth(settings.value("AddressAreaWidth").toInt());
-    hexEdit->setBytesPerLine(settings.value("BytesPerLine").toInt());
+    hexEdit->setAddressWidth(settings.value("AddressAreaWidth",4).toInt());
+    hexEdit->setBytesPerLine(settings.value("BytesPerLine",16).toInt());
 }
 
 //function part
