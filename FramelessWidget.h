@@ -6,7 +6,7 @@
 #include <QMouseEvent>
 
 //cursor type
-enum class CursorPos : char
+enum CursorPos
 {
     Default,
     Right,
@@ -23,7 +23,7 @@ enum class CursorPos : char
 #pragma pack(1)
 
 //window status
-struct pressWindowsState final
+struct pressWindowsState
 {
     bool    MousePressed;
     bool    IsPressBorder;

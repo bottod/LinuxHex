@@ -43,7 +43,8 @@ private:
 
     QHBoxLayout *titleLayout;
 
-    bool isMax = true;
+    bool isMax;
+    void maxiumBtnClickedFun();
 };
 
 #pragma pack(pop)

@@ -6,6 +6,7 @@
 TitleBar::TitleBar(QWidget *parent) : QFrame(parent)
 {
     setMouseTracking(true);
+    isMax = true;
     initTitle();
 
     //qss
@@ -58,21 +59,7 @@ void TitleBar::initTitle()
     maximumBtn->setObjectName("maximumBtn");
     maximumBtn->setToolTip("最大化");
 
-    connect(maximumBtn,&QPushButton::clicked,this,[&]()
-    {
-        if(isMax)
-        {
-            maximumBtn->setStyleSheet(::cancel_maxBtnStyle);
-            maximumBtn->setToolTip("取消最大化");
-            isMax = false;
-        }
-        else
-        {
-            maximumBtn->setStyleSheet(::set_maxBtnStyle);
-            maximumBtn->setToolTip("最大化");
-            isMax = true;
-        }
-    });
+    connect(maximumBtn,&QPushButton::clicked,this,&TitleBar::maxiumBtnClickedFun);
 
     closeBtn = new QPushButton(this);
     closeBtn->setCursor(Qt::PointingHandCursor);
@@ -117,4 +104,20 @@ void TitleBar::setMaxValue(bool value)
 void TitleBar::setTitle(QString title)
 {
     NameLabel->setText(title);
+}
+
+void TitleBar::maxiumBtnClickedFun()
+{
+    if(isMax)
+    {
+        maximumBtn->setStyleSheet(::cancel_maxBtnStyle);
+        maximumBtn->setToolTip("取消最大化");
+        isMax = false;
+    }
+    else
+    {
+        maximumBtn->setStyleSheet(::set_maxBtnStyle);
+        maximumBtn->setToolTip("最大化");
+        isMax = true;
+    }
 }

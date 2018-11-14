@@ -30,7 +30,7 @@ void FramelessWidget::mouseMoveRect(const QPoint &p)
     {
         switch (m_curPos)
         {
-            case CursorPos::BottomRight:
+            case BottomRight:
             {
                 int setW=QCursor::pos().x()-x();
                 int setH=QCursor::pos().y()-y();

@@ -34,7 +34,7 @@ public:
 private:
 
     //app window is max or normal
-    bool isMaximun = false;
+    bool isMaximun;
 
     //sys tray
     QSystemTrayIcon *m_SystemTray;
@@ -82,8 +82,8 @@ private:
 
     QString curFileName = "";
     QFile file;
-    bool isUntitled = true;            //if there has a file; first open untitled
-    bool isSaved = false;              //if this file has been saved
+    bool isUntitled;            //if there has a file; first open untitled
+    bool isSaved;              //if this file has been saved
     QHexEdit *hexEdit;
 
 
@@ -122,6 +122,10 @@ private:
 
     void showOptionDialog();
     void showSearchDialog();
+
+
+    void aboutActFunc();
+    void maxBtnClickedFunc();
 
 private slots:
     void findNext();

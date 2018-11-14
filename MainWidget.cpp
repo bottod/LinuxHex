@@ -6,6 +6,9 @@ MainWidget::MainWidget(QWidget *parent)
 {
     setMinimumSize(480,320);
 
+    isMaximun = false;
+    isUntitled = true;            //if there has a file; first open untitled
+    isSaved = false;
     init();
 }
 
@@ -99,10 +102,7 @@ void MainWidget::initAction()
     connect(saveSelectionReadable,&QAction::triggered,this,&MainWidget::saveSelectionToReadableFile);
 
     aboutAct = new QAction(QIcon(":/Source/image/app.png"),"关于(&P)", this);
-    connect(aboutAct,&QAction::triggered,[=]()
-    {
-        QMessageBox::about(this, "关于 LinuxHex","遵循GPL协议的开源软件");
-    });
+    connect(aboutAct,&QAction::triggered,this,&MainWidget::aboutActFunc);
 
     findAct = new QAction(QIcon(":/Source/image/find.png"), "&查找/替换", this);
     findAct->setShortcuts(QKeySequence::Find);
@@ -132,19 +132,7 @@ void MainWidget::initOtherWidget()
 
     mainTitleBar = new TitleBar(this);
     connect(mainTitleBar->minimumBtn,&QPushButton::clicked,this,&MainWidget::showMinimized);
-    connect(mainTitleBar->maximumBtn,&QPushButton::clicked,[&]()
-    {
-        if(isMaximun)
-        {
-            isMaximun = false;
-            showNormal();
-        }
-        else
-        {
-            isMaximun = true;
-            showMaximized();
-        }
-    });
+    connect(mainTitleBar->maximumBtn,&QPushButton::clicked,this,&MainWidget::maxBtnClickedFunc);
     connect(mainTitleBar->closeBtn,&QPushButton::clicked,this,&MainWidget::close);
     connect(mainTitleBar->setBtn,&QPushButton::clicked,this,&MainWidget::showOptionDialog);
 
@@ -264,14 +252,14 @@ void MainWidget::closeEvent(QCloseEvent *event)
         int result = closMessage.exec();
         switch (result)
         {
-            case (QMessageBox::Yes):
+            case QMessageBox::Yes:
                 saveFile(curFileName);
                 event->accept();
                 break;
-            case(QMessageBox::No):
+            case QMessageBox::No:
                 event->accept();
                 break;
-            case (QMessageBox::Cancel):
+            case QMessageBox::Cancel:
                 event->ignore();
                 break;
         }
@@ -526,3 +514,21 @@ QString MainWidget::strippedName(const QString &fullFileName)
 }
 
 
+void MainWidget::aboutActFunc()
+{
+    QMessageBox::about(this, "关于 LinuxHex","遵循GPL协议的开源软件");
+}
+
+void MainWidget::maxBtnClickedFunc()
+{
+    if(isMaximun)
+    {
+        isMaximun = false;
+        showNormal();
+    }
+    else
+    {
+        isMaximun = true;
+        showMaximized();
+    }
+}
