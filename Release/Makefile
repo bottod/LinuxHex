@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -O2 -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 INCPATH       = -I../../LinuxHex -I. -I/opt/Qt5.11.2/5.11.2/gcc_64/include -I/opt/Qt5.11.2/5.11.2/gcc_64/include/QtWidgets -I/opt/Qt5.11.2/5.11.2/gcc_64/include/QtGui -I/opt/Qt5.11.2/5.11.2/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/linux-g++
 QMAKE         = /opt/Qt5.11.2/5.11.2/gcc_64/bin/qmake
 DEL_FILE      = rm -f
@@ -262,6 +262,7 @@ DIST          = /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/spec_pre.prf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/qt_config.prf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/linux-g++/qmake.conf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/spec_post.prf \
+		../.qmake.stash \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/exclusive_builds.prf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/toolchain.prf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/default_pre.prf \
@@ -481,6 +482,7 @@ Makefile: ../LinuxHex.pro /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/linux-g++/qmake.co
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/qt_config.prf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/linux-g++/qmake.conf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/exclusive_builds.prf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/toolchain.prf \
 		/opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/default_pre.prf \
@@ -675,6 +677,7 @@ Makefile: ../LinuxHex.pro /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/linux-g++/qmake.co
 /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/qt_config.prf:
 /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/linux-g++/qmake.conf:
 /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/spec_post.prf:
+.qmake.stash:
 /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/exclusive_builds.prf:
 /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/toolchain.prf:
 /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/default_pre.prf:
@@ -776,7 +779,7 @@ compiler_moc_predefs_make_all: moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) moc_predefs.h
 moc_predefs.h: /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/data/dummy.cpp
-	g++ -pipe -O2 -std=gnu++11 -Wall -W -dM -E -o moc_predefs.h /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/data/dummy.cpp
+	g++ -pipe -O2 -Wall -W -dM -E -o moc_predefs.h /opt/Qt5.11.2/5.11.2/gcc_64/mkspecs/features/data/dummy.cpp
 
 compiler_moc_header_make_all: moc_MainWidget.cpp moc_FramelessWidget.cpp moc_TrayIconMenu.cpp moc_TitleBar.cpp moc_chunks.cpp moc_commands.cpp moc_qhexedit.cpp moc_StatusBar.cpp moc_OptionDialog.cpp moc_SearchDialog.cpp
 compiler_moc_header_clean:
