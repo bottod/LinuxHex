@@ -80,7 +80,7 @@ private:
     OptionDialog *optionDialog;
     SearchDialog *searchDialog;
 
-    QString curFileName = "";
+    QString curFileName;
     QFile file;
     bool isUntitled;            //if there has a file; first open untitled
     bool isSaved;              //if this file has been saved

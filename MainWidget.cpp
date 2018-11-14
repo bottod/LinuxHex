@@ -6,6 +6,7 @@ MainWidget::MainWidget(QWidget *parent)
 {
     setMinimumSize(480,320);
 
+    curFileName = "";
     isMaximun = false;
     isUntitled = true;            //if there has a file; first open untitled
     isSaved = false;
