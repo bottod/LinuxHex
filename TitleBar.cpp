@@ -8,11 +8,9 @@ TitleBar::TitleBar(QWidget *parent) : QFrame(parent)
     setMouseTracking(true);
     initTitle();
 
-    //qss
-    QFile mTitlebarQss(":/Source/stylesheet/TitleBar.qss");
-    mTitlebarQss.open(QFile::ReadOnly);
-    this->setStyleSheet(mTitlebarQss.readAll());
-    mTitlebarQss.close();
+    this->setStyleSheet("QFrame{background:rgb(102,183,255);\
+                        border-top-left-radius:15px;\
+                        border-top-right-radius:15px;}");
 
 }
 
@@ -35,13 +33,16 @@ void TitleBar::initTitle()
     NameLabel = new QLabel(this);
     NameLabel->setFixedHeight(20);
     NameLabel->setText("* - LinuxHex");
-    NameLabel->setObjectName("NameLabel");
+    NameLabel->setStyleSheet("QLabel{color:rgb(255,255,255);\
+                             font:bold;}");
 
     setBtn = new QPushButton(this);
     setBtn->setCursor(Qt::PointingHandCursor);
     setBtn->setFixedSize(15,16);
     setBtn->setToolTip("设置");
-    setBtn->setObjectName("setBtn");
+    setBtn->setStyleSheet("QPushButton{background:transparent;\
+                    border-image:url(:/Source/image/set.png);}\
+                    QPushButton:hover{border-image:url(:/Source/image/set_hover.png);}");
 
     lineLabel = new QLabel(this);
     lineLabel->setPixmap(QPixmap(":/Source/image/line.png"));
@@ -50,35 +51,25 @@ void TitleBar::initTitle()
     minimumBtn->setCursor(Qt::PointingHandCursor);
     minimumBtn->setToolTip("最小化");
     minimumBtn->setFixedSize(14,18);
-    minimumBtn->setObjectName("minimumBtn");
+    minimumBtn->setStyleSheet("QPushButton{background:transparent;\
+                              border-image:url(:/Source/image/minimum.png);}\
+                              QPushButton:hover{border-image:url(:/Source/image/minimum_hover.png);}");
 
     maximumBtn = new QPushButton(this);
     maximumBtn->setCursor(Qt::PointingHandCursor);
     maximumBtn->setFixedSize(14,11);
-    maximumBtn->setObjectName("maximumBtn");
+    maximumBtn->setStyleSheet("QPushButton{background:transparent;\
+                              border-image:url(:/Source/image/maximum.png);}\
+                              QPushButton:hover{border-image:url(:/Source/image/maximum_hover.png);}");
     maximumBtn->setToolTip("最大化");
-
-    connect(maximumBtn,&QPushButton::clicked,this,[&]()
-    {
-        if(isMax)
-        {
-            maximumBtn->setStyleSheet(::cancel_maxBtnStyle);
-            maximumBtn->setToolTip("取消最大化");
-            isMax = false;
-        }
-        else
-        {
-            maximumBtn->setStyleSheet(::set_maxBtnStyle);
-            maximumBtn->setToolTip("最大化");
-            isMax = true;
-        }
-    });
 
     closeBtn = new QPushButton(this);
     closeBtn->setCursor(Qt::PointingHandCursor);
     closeBtn->setFixedSize(12,11);
     closeBtn->setToolTip("关闭");
-    closeBtn->setObjectName("closeBtn");
+    closeBtn->setStyleSheet("QPushButton{background:transparent;\
+                            border-image:url(:/Source/image/close.png);}\
+                            QPushButton:hover{border-image:url(:/Source/image/close_hover.png);}");
 
 
     titleLayout->addWidget(titleIconLabel);
@@ -95,23 +86,6 @@ void TitleBar::initTitle()
     titleLayout->addSpacing(10);
     titleLayout->addWidget(closeBtn);
 
-}
-
-void TitleBar::setMaxValue(bool value)
-{
-    isMax = value;
-    if(isMax)
-    {
-        maximumBtn->setStyleSheet(::cancel_maxBtnStyle);
-        maximumBtn->setToolTip("取消最大化");
-        isMax = false;
-    }
-    else
-    {
-        maximumBtn->setStyleSheet(::set_maxBtnStyle);
-        maximumBtn->setToolTip("最大化");
-        isMax = true;
-    }
 }
 
 void TitleBar::setTitle(QString title)

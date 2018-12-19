@@ -7,6 +7,12 @@ SearchDialog::SearchDialog(QHexEdit *hexEdit, QWidget *parent) :
     init();
 }
 
+SearchDialog::SearchDialog(QWidget *parent) :
+    QDialog (parent)
+{
+    init();
+}
+
 SearchDialog::~SearchDialog()
 {
 }
@@ -157,6 +163,11 @@ void SearchDialog::replaceAll()
     }
     if (replaceCounter > 0)
         QMessageBox::information(this, tr("LinuxHex"), QString(tr("替换了 %1 处")).arg(replaceCounter));
+}
+
+void SearchDialog::setHexEdit(QHexEdit *hex_edit)
+{
+    _hexEdit = hex_edit;
 }
 
 QByteArray SearchDialog::getContent(int comboIndex, const QString &input)

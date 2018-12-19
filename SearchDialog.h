@@ -17,6 +17,7 @@ class SearchDialog : public QDialog
     Q_OBJECT
 public:
     explicit SearchDialog(QHexEdit *hexEdit,QWidget *parent = nullptr);
+    explicit SearchDialog(QWidget *parent = nullptr);
     ~SearchDialog();
 
     qint64 findR();
@@ -25,6 +26,8 @@ public:
 
     void replace();
     void replaceAll();
+
+    void setHexEdit(QHexEdit *hex_edit);
 
 private:
     void init();

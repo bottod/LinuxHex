@@ -396,6 +396,11 @@ bool QHexEdit::isModified()
     return _modified;
 }
 
+void QHexEdit::setModified(bool status)
+{
+    _modified = status;
+}
+
 qint64 QHexEdit::lastIndexOf(const QByteArray &ba, qint64 from)
 {
     qint64 pos = _chunks->lastIndexOf(ba, from);
@@ -1137,4 +1142,19 @@ void QHexEdit::updateCursor()
     else
         _blink = true;
     viewport()->update(_cursorRect);
+}
+
+bool QHexEdit::getOverWriteMode()
+{
+    return _overwriteMode;
+}
+
+qint64 QHexEdit::getLastEventSize()
+{
+    return _lastEventSize;
+}
+
+qint64 QHexEdit::getPosCurrent()
+{
+    return _bPosCurrent;
 }

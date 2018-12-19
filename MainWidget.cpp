@@ -4,7 +4,7 @@
 MainWidget::MainWidget(QWidget *parent)
     : FramelessWidget(parent)
 {
-    setMinimumSize(480,320);
+    setMinimumSize(610,610);
 
     init();
 }
@@ -89,11 +89,11 @@ void MainWidget::initAction()
 
     undoAct = new QAction(QIcon(":/Source/image/undo.png"), "&Undo", this);
     undoAct->setShortcuts(QKeySequence::Undo);
-    connect(undoAct, &QAction::triggered, hexEdit, &QHexEdit::undo);
+    connect(undoAct, &QAction::triggered, [=](){reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->undo();});
 
     redoAct = new QAction(QIcon(":/Source/image/redo.png"), "&Redo", this);
     redoAct->setShortcuts(QKeySequence::Redo);
-    connect(redoAct, &QAction::triggered, hexEdit, &QHexEdit::redo);
+    connect(redoAct, &QAction::triggered, [=](){reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->redo();});
 
     saveSelectionReadable = new QAction("导出选中部分", this);
     connect(saveSelectionReadable,&QAction::triggered,this,&MainWidget::saveSelectionToReadableFile);
@@ -122,13 +122,10 @@ void MainWidget::initAction()
 
 void MainWidget::initOtherWidget()
 {
-    hexEdit = new QHexEdit(this);
-    connect(hexEdit,&QHexEdit::dataChanged,this,&MainWidget::dataChanged);
-
     optionDialog = new OptionDialog(this);
     connect(optionDialog, &OptionDialog::accepted, this, &MainWidget::optionAccept);
 
-    searchDialog = new SearchDialog(hexEdit,this);
+    searchDialog = new SearchDialog(this);
 
     mainTitleBar = new TitleBar(this);
     connect(mainTitleBar->minimumBtn,&QPushButton::clicked,this,&MainWidget::showMinimized);
@@ -137,22 +134,63 @@ void MainWidget::initOtherWidget()
         if(isMaximun)
         {
             isMaximun = false;
+            mainTitleBar->maximumBtn->setStyleSheet("QPushButton{border-image:url(:/Source/image/maximum.png);} \
+                                                    QPushButton:hover{border-image:url(:/Source/image/maximum_hover.png);}");
+            mainTitleBar->maximumBtn->setToolTip("最大化");
             showNormal();
         }
         else
         {
             isMaximun = true;
+
+            mainTitleBar->maximumBtn->setStyleSheet("QPushButton{border-image:url(:/Source/image/maximum_cancel.png);} \
+                                                    QPushButton:hover{border-image:url(:/Source/image/maximum_cancel_hover.png);}");
+
+            mainTitleBar->maximumBtn->setToolTip("向下还原");
             showMaximized();
         }
     });
     connect(mainTitleBar->closeBtn,&QPushButton::clicked,this,&MainWidget::close);
     connect(mainTitleBar->setBtn,&QPushButton::clicked,this,&MainWidget::showOptionDialog);
 
+    mainMiddleWidget = new MiddleWidget(this);
+    mainMiddleWidget->setAutoFillBackground(true);
+    connect(mainMiddleWidget->m_Tab,&QTabWidget::tabCloseRequested,this,&MainWidget::removeSubTab);
+    connect(mainMiddleWidget->m_Tab,&QTabWidget::currentChanged,[=]()
+    {
+        searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
+        bool isSaved = !(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->isModified());
+        int index = mainMiddleWidget->m_Tab->currentIndex();
+
+        if(isSaved)
+            mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+        else
+            mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+
+        mainStatusBar->setSize(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getLastEventSize());
+        mainStatusBar->setAddress(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getPosCurrent());
+
+        //different widget can have differnt write mode
+        //this->setOverwriteMode(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getOverWriteMode());
+
+        QSettings settings;
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressArea(settings.value("AddressArea",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAsciiArea(settings.value("AsciiArea",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlighting(settings.value("Highlighting",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setOverwriteMode(settings.value("OverwriteMode",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setReadOnly(settings.value("ReadOnly",false).toBool());
+
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlightingColor(settings.value("HighlightingColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressAreaColor(settings.value("AddressAreaColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setSelectionColor(settings.value("SelectionColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setFont(settings.value("WidgetFont",QFont("Monospace", 10)).value<QFont>());
+
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressWidth(settings.value("AddressAreaWidth",4).toInt());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setBytesPerLine(settings.value("BytesPerLine",16).toInt());
+    });
+
     mainStatusBar = new StatusBar(this);
     mainStatusBar->setAutoFillBackground(true);
-    connect(hexEdit,&QHexEdit::currentSizeChanged,mainStatusBar,&StatusBar::setSize);
-    connect(hexEdit,&QHexEdit::currentAddressChanged,mainStatusBar,&StatusBar::setAddress);
-    connect(hexEdit, &QHexEdit::overwriteModeChanged, this, &MainWidget::setOverwriteMode);
 
 }
 
@@ -165,7 +203,7 @@ void MainWidget::initLayout()
 
     mainLayout->addWidget(mainTitleBar);
     mainLayout->addWidget(mainMenuBar);
-    mainLayout->addWidget(hexEdit);
+    mainLayout->addWidget(mainMiddleWidget);
     mainLayout->addWidget(mainStatusBar);
 
     this->setLayout(mainLayout);
@@ -228,48 +266,52 @@ void MainWidget::mouseDoubleClickEvent(QMouseEvent *event)
     {
         if(isMaximun)
         {
-            showNormal();
-            mainTitleBar->setMaxValue(false);
             isMaximun = false;
+            mainTitleBar->maximumBtn->setStyleSheet("QPushButton{border-image:url(:/Source/image/maximum.png);} \
+                                                    QPushButton:hover{border-image:url(:/Source/image/maximum_hover.png);}");
+            mainTitleBar->maximumBtn->setToolTip("最大化");
+            showNormal();
         }
         else
         {
-            showMaximized();
-            mainTitleBar->setMaxValue(true);
             isMaximun = true;
+            mainTitleBar->maximumBtn->setStyleSheet("QPushButton{border-image:url(:/Source/image/maximum_cancel.png);} \
+                                                    QPushButton:hover{border-image:url(:/Source/image/maximum_cancel_hover.png);}");
+            mainTitleBar->maximumBtn->setToolTip("向下还原");
+            showMaximized();
         }
     }
     return QWidget::mouseDoubleClickEvent(event);
 }
+
 void MainWidget::closeEvent(QCloseEvent *event)
 {
-    writeSettings();
-    if(!isUntitled && !isSaved)
+    if(quitTips)
     {
-        QString strippedFileName = strippedName(curFileName);
-
-        QString messageTitle = "在关闭前将更改保存到文档\"" + strippedFileName + "\"吗?";
-        QString messageContent = "如果您不保存，之前所做的更改将永久丢失";
+        QString messageTitle = "确认关闭";
+        QString messageContent = "关闭所有文档并退出程序?";
 
         QMessageBox closMessage(QMessageBox::Question, messageTitle, messageContent);
         closMessage.addButton(QMessageBox::No);
-        closMessage.setButtonText(QMessageBox::No, QString("不保存退出(&W)"));
+        closMessage.setButtonText(QMessageBox::No, QString("退出(&Q)"));
 
         closMessage.addButton(QMessageBox::Cancel);
         closMessage.setButtonText(QMessageBox::Cancel, QString("取消(&C)"));
 
         closMessage.addButton(QMessageBox::Yes);
-        closMessage.setButtonText(QMessageBox::Yes, QString("保存(&S)"));
+        closMessage.setButtonText(QMessageBox::Yes, QString("不再提醒(&O)"));
 
         int result = closMessage.exec();
         switch (result)
         {
             case (QMessageBox::Yes):
-                saveFile(curFileName);
+                quitTips = false;
                 event->accept();
+                writeSettings();
                 break;
             case(QMessageBox::No):
                 event->accept();
+                writeSettings();
                 break;
             case (QMessageBox::Cancel):
                 event->ignore();
@@ -287,8 +329,11 @@ void MainWidget::dropEvent(QDropEvent *event)
     if (event->mimeData()->hasUrls())
     {
         QList<QUrl> urls = event->mimeData()->urls();
-        QString filePath = urls.at(0).toLocalFile();
-        loadFile(filePath);
+        for(int i = 0; i < urls.count(); ++i)
+        {
+            QString filePath = urls.at(i).toLocalFile();
+            loadFile(filePath);
+        }
         event->accept();
     }
 }
@@ -299,6 +344,8 @@ void MainWidget::writeSettings()
     QSettings settings;
     settings.setValue("pos", pos());
     settings.setValue("size", size());
+    settings.setValue("ismax",isMaximun);
+    settings.setValue("quit_tips",quitTips);
 }
 void MainWidget::readSettings()
 {
@@ -308,19 +355,38 @@ void MainWidget::readSettings()
     move(pos);
     resize(size);
 
-    hexEdit->setAddressArea(settings.value("AddressArea",true).toBool());
-    hexEdit->setAsciiArea(settings.value("AsciiArea",true).toBool());
-    hexEdit->setHighlighting(settings.value("Highlighting",true).toBool());
-    hexEdit->setOverwriteMode(settings.value("OverwriteMode",true).toBool());
-    hexEdit->setReadOnly(settings.value("ReadOnly",false).toBool());
+    isMaximun = settings.value("ismax",false).toBool();
+    if(!isMaximun)
+    {
+        mainTitleBar->maximumBtn->setStyleSheet("QPushButton{border-image:url(:/Source/image/maximum.png);} \
+                                                QPushButton:hover{border-image:url(:/Source/image/maximum_hover.png);}");
+        mainTitleBar->maximumBtn->setToolTip("最大化");
+    }
+    else
+    {
+        mainTitleBar->maximumBtn->setStyleSheet("QPushButton{border-image:url(:/Source/image/maximum_cancel.png);} \
+                                                QPushButton:hover{border-image:url(:/Source/image/maximum_cancel_hover.png);}");
+        mainTitleBar->maximumBtn->setToolTip("向下还原");
+    }
 
-    hexEdit->setHighlightingColor(settings.value("HighlightingColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
-    hexEdit->setAddressAreaColor(settings.value("AddressAreaColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
-    hexEdit->setSelectionColor(settings.value("SelectionColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
-    hexEdit->setFont(settings.value("WidgetFont",QFont("Monospace", 10)).value<QFont>());
+    quitTips = settings.value("quit_tips",true).toBool();
 
-    hexEdit->setAddressWidth(settings.value("AddressAreaWidth",4).toInt());
-    hexEdit->setBytesPerLine(settings.value("BytesPerLine",16).toInt());
+    if(mainMiddleWidget->m_Tab->count() > 0)
+    {
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressArea(settings.value("AddressArea",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAsciiArea(settings.value("AsciiArea",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlighting(settings.value("Highlighting",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setOverwriteMode(settings.value("OverwriteMode",true).toBool());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setReadOnly(settings.value("ReadOnly",false).toBool());
+
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlightingColor(settings.value("HighlightingColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressAreaColor(settings.value("AddressAreaColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setSelectionColor(settings.value("SelectionColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setFont(settings.value("WidgetFont",QFont("Monospace", 10)).value<QFont>());
+
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressWidth(settings.value("AddressAreaWidth",4).toInt());
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setBytesPerLine(settings.value("BytesPerLine",16).toInt());
+    }
 }
 
 //function part
@@ -335,21 +401,45 @@ void MainWidget::openFile()
 
 void MainWidget::loadFile(const QString &fileName)
 {
-    file.setFileName(fileName);
-    if (!hexEdit->setData(file))
+    if(!file_list.contains(fileName))
     {
-        QMessageBox::warning(this, tr("LinuxHex"),tr("Cannot read file %1:\n%2.").arg(fileName).arg(file.errorString()));
-        return;
+        QFile *file = new QFile(this);
+        file->setFileName(fileName);
+        QHexEdit *hexEdit = new QHexEdit();
+        if (!hexEdit->setData(*file))
+        {
+            QMessageBox::warning(this, tr("LinuxHex"),tr("Cannot read file %1:\n%2.").arg(fileName).arg(file->errorString()));
+            return;
+        }
+        mainStatusBar->showMessage("文件打开成功!",2000);
+        setTitleFileName(fileName);
+        connect(hexEdit,&QHexEdit::dataChanged,this,&MainWidget::dataChanged);
+        connect(hexEdit,&QHexEdit::currentSizeChanged,mainStatusBar,&StatusBar::setSize);
+        connect(hexEdit,&QHexEdit::currentAddressChanged,mainStatusBar,&StatusBar::setAddress);
+        connect(hexEdit, &QHexEdit::overwriteModeChanged, this, &MainWidget::setOverwriteMode);
+
+        QString strippedFileName = strippedName(fileName);
+        mainMiddleWidget->m_Tab->insertTab(mainMiddleWidget->m_Tab->count(), hexEdit,strippedFileName);
+        mainMiddleWidget->m_Tab->setTabToolTip(mainMiddleWidget->m_Tab->count()-1,fileName);
+        mainMiddleWidget->m_Tab->setCurrentIndex(mainMiddleWidget->m_Tab->count()-1);
+        file_list.append(fileName);
     }
-    mainStatusBar->showMessage("文件打开成功!",2000);
-    setCurrentFile(fileName);
+    else
+    {
+        for(int i = 0; i < mainMiddleWidget->m_Tab->count(); ++i)
+        {
+            if(fileName == mainMiddleWidget->m_Tab->tabToolTip(i))
+            {
+                mainMiddleWidget->m_Tab->setCurrentIndex(i);
+                break;
+            }
+        }
+    }
 }
 
-void MainWidget::setCurrentFile(const QString &fileName)
+void MainWidget::setTitleFileName(const QString fileName)
 {
-    curFileName = QFileInfo(fileName).canonicalFilePath();
-    isUntitled = fileName.isEmpty();
-    QString strippedFileName = strippedName(curFileName);
+    QString strippedFileName = strippedName(fileName);
 
     if (fileName.isEmpty())
         mainTitleBar->setTitle("* - LinuxHex");
@@ -357,22 +447,19 @@ void MainWidget::setCurrentFile(const QString &fileName)
         mainTitleBar->setTitle(strippedFileName + " - LinuxHex");
 }
 
-
 bool MainWidget::save()
 {
-    if (isUntitled)
+    if(mainMiddleWidget->m_Tab->count() >= 1)
     {
-        return saveAs();
+        return saveFile(mainMiddleWidget->m_Tab->tabToolTip(mainMiddleWidget->m_Tab->currentIndex()));
     }
-    else
-    {
-        return saveFile(curFileName);
-    }
+    mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
+    return false;
 }
 
 bool MainWidget::saveAs()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("另存为"),curFileName);
+    QString fileName = QFileDialog::getSaveFileName(this, tr("另存为"));
     if (fileName.isEmpty())
         return false;
 
@@ -385,7 +472,7 @@ bool MainWidget::saveFile(const QString &fileName)
 
     this->setCursor(QCursor(Qt::WaitCursor));
     QFile file(tmpFileName);
-    bool ok = hexEdit->write(file);
+    bool ok = reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->write(file);
     //write tmp
     if(ok)
     {
@@ -421,15 +508,16 @@ bool MainWidget::saveFile(const QString &fileName)
         }
 
         this->setCursor(QCursor(Qt::ArrowCursor));
-        setCurrentFile(fileName);
         mainStatusBar->showMessage(tr("文件已保存!"), 2000);
+        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setModified(false);
+        int index = mainMiddleWidget->m_Tab->currentIndex();
+        mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
         return true;
     }
     else
     {
         this->setCursor(QCursor(Qt::ArrowCursor));
         QMessageBox::warning(this, tr("LinuxHex"), tr("保存文件失败 %1.").arg(fileName));
-        setCurrentFile(fileName);
         return false;
     }
 }
@@ -446,7 +534,7 @@ void MainWidget::saveToReadableFile()
             return;
         }
         this->setCursor(Qt::WaitCursor);
-        file.write(hexEdit->toReadableString().toUtf8());
+        file.write(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->toReadableString().toUtf8());
         this->setCursor(QCursor(Qt::ArrowCursor));
 
         mainStatusBar->showMessage(tr("文件已保存!"), 2000);
@@ -464,7 +552,7 @@ void MainWidget::saveSelectionToReadableFile()
             return;
         }
         this->setCursor(Qt::WaitCursor);
-        file.write(hexEdit->selectionToReadableString().toUtf8());
+        file.write(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->selectionToReadableString().toUtf8());
         this->setCursor(QCursor(Qt::ArrowCursor));
 
         mainStatusBar->showMessage(tr("文件已保存!"), 2000);
@@ -484,15 +572,14 @@ void MainWidget::setOverwriteMode(bool mode)
 
 void MainWidget::dataChanged()
 {
-    isSaved = !(hexEdit->isModified());
-    QString strippedFileName = strippedName(curFileName);
+    bool isSaved = !(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->isModified());
+    int index = mainMiddleWidget->m_Tab->currentIndex();
 
     if(isSaved)
-        mainTitleBar->setTitle(strippedFileName + " - LinuxHex");
+        mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
     else
-        mainTitleBar->setTitle("*" + strippedFileName + " - LinuxHex");
+        mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
 }
-
 
 void MainWidget::optionAccept()
 {
@@ -507,17 +594,29 @@ void MainWidget::showOptionDialog()
 
 void MainWidget::showSearchDialog()
 {
+    searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
     searchDialog->show();
 }
 
 void MainWidget::findNext()
 {
+    searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
     searchDialog->findNext();
 }
 
 void MainWidget::findPre()
 {
+    searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
     searchDialog->findPre();
+}
+
+void MainWidget::removeSubTab(int index)
+{
+    if(mainMiddleWidget->m_Tab->count() > 1)
+    {
+        file_list.removeOne(mainMiddleWidget->m_Tab->tabToolTip(index));
+        mainMiddleWidget->m_Tab->removeTab(index);
+    }
 }
 
 QString MainWidget::strippedName(const QString &fullFileName)

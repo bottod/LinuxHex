@@ -35,7 +35,8 @@ SOURCES += \
     qhexedit.cpp \
     StatusBar.cpp \
     OptionDialog.cpp \
-    SearchDialog.cpp
+    SearchDialog.cpp \
+    MiddleWidget.cpp
 
 HEADERS += \
         MainWidget.h \
@@ -47,7 +48,8 @@ HEADERS += \
     qhexedit.h \
     StatusBar.h \
     OptionDialog.h \
-    SearchDialog.h
+    SearchDialog.h \
+    MiddleWidget.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

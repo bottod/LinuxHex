@@ -14,6 +14,7 @@
 #include "FramelessWidget.h"
 #include "TrayIconMenu.h"
 #include "TitleBar.h"
+#include "MiddleWidget.h"
 #include "StatusBar.h"
 #include "OptionDialog.h"
 #include "SearchDialog.h"
@@ -34,7 +35,8 @@ public:
 private:
 
     //app window is max or normal
-    bool isMaximun = false;
+    bool isMaximun;
+    bool quitTips;
 
     //sys tray
     QSystemTrayIcon *m_SystemTray;
@@ -70,6 +72,9 @@ private:
     //TitleBar
     TitleBar *mainTitleBar;
 
+    //middleWidget
+    MiddleWidget *mainMiddleWidget;
+
     //StatusBar
     StatusBar *mainStatusBar;
 
@@ -79,13 +84,6 @@ private:
     //set dialog
     OptionDialog *optionDialog;
     SearchDialog *searchDialog;
-
-    QString curFileName = "";
-    QFile file;
-    bool isUntitled = true;            //if there has a file; first open untitled
-    bool isSaved = false;              //if this file has been saved
-    QHexEdit *hexEdit;
-
 
     void initSystemTray();
     void initOtherWidget();
@@ -109,7 +107,7 @@ private:
 private:
     void openFile();
     void loadFile(const QString& fileName);
-    void setCurrentFile(const QString& fileName);
+    void setTitleFileName(const QString fileName);
 
     bool save();
     bool saveAs();
@@ -130,9 +128,12 @@ private slots:
 
 public slots:
     void optionAccept();
+    void removeSubTab(int index);
 
 private:
     QString strippedName(const QString &fullFileName);
+
+    QStringList file_list;
 
 };
 

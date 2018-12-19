@@ -231,6 +231,7 @@ public:
      * \return true when document is modified else false
      */
     bool isModified();
+    void setModified(bool);
 
     /*! Find last occurence of ba in QHexEdit data
      * \param ba Data to find
@@ -414,6 +415,11 @@ private:
     int _rowsShown;                             // lines of text shown
     UndoStack * _undoStack;                     // Stack to store edit actions for undo/redo
     /*! \endcond docNever */
+
+public:
+    qint64 getLastEventSize();
+    qint64 getPosCurrent();
+    bool getOverWriteMode();
 };
 
 #endif // QHEXEDIT_H

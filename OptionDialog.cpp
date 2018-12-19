@@ -141,8 +141,8 @@ void OptionDialog::readSettings()
     ReadMode_Check->setChecked(settings.value("ReadOnly").toBool());
 
     setColor(Highlight_Label, settings.value("HighlightingColor", QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
-    setColor(Address_Label, settings.value("AddressAreaColor", this->palette().alternateBase().color()).value<QColor>());
-    setColor(Selection_Label, settings.value("SelectionColor", this->palette().highlight().color()).value<QColor>());
+    setColor(Address_Label, settings.value("AddressAreaColor", QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+    setColor(Selection_Label, settings.value("SelectionColor", QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
     Font_Edit->setFont(settings.value("WidgetFont", QFont("Monospace", 10)).value<QFont>());
 
 

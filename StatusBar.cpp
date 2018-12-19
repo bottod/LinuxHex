@@ -3,12 +3,9 @@
 StatusBar::StatusBar(QWidget *parent) : QStatusBar (parent)
 {
     init();
-
-    //qss
-    QFile mStatusbarQss(":/Source/stylesheet/StatusBar.qss");
-    mStatusbarQss.open(QFile::ReadOnly);
-    this->setStyleSheet(mStatusbarQss.readAll());
-    mStatusbarQss.close();
+    this->setStyleSheet("QStatusBar{background:rgb(102,183,255);\
+                        border-bottom-left-radius:15px;\
+                        border-bottom-right-radius:15px;}");
 }
 
 void StatusBar::init()
