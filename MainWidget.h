@@ -19,6 +19,8 @@
 #include "OptionDialog.h"
 #include "SearchDialog.h"
 #include "qhexedit.h"
+#include "InfoFrame.h"
+#include "DataFrame.h"
 
 //Bug List:
 //1. the frameless window can't move out the real screen window {[Windows(N)   Linux(Y)]    system bug?(seem yes)}
@@ -48,6 +50,7 @@ private:
     //list menu
     QMenu *fileMenu;
     QMenu *editMenu;
+    QMenu *watchMenu;
     QMenu *helpMenu;
 
     //for fileMenu
@@ -66,20 +69,28 @@ private:
     QAction *findAct;
     QAction *optionsAct;
 
+    //for watchMenu
+    QAction *infoAct;
+    QAction *dataAct;
+
+    //bytes to kb...
+    QString humanReadableSize(const qint64 &size, int precision);//change byte kb mb
+
     //for helpMenu
     QAction *aboutAct;
 
     //TitleBar
     TitleBar *mainTitleBar;
 
+    InfoFrame *infoWidget;
+    DataFrame *dataWidget;
+    QFrame *leftFrame;
+
     //middleWidget
     MiddleWidget *mainMiddleWidget;
 
     //StatusBar
     StatusBar *mainStatusBar;
-
-    //Layout
-    QVBoxLayout *mainLayout;
 
     //set dialog
     OptionDialog *optionDialog;
@@ -92,6 +103,8 @@ private:
     void initLayout();
     //init all;
     void init();
+
+    void getFileInfo();//get current file info;
 
 protected:
     void mousePressEvent(QMouseEvent *event);

@@ -36,7 +36,9 @@ SOURCES += \
     StatusBar.cpp \
     OptionDialog.cpp \
     SearchDialog.cpp \
-    MiddleWidget.cpp
+    MiddleWidget.cpp \
+    InfoFrame.cpp \
+    DataFrame.cpp
 
 HEADERS += \
         MainWidget.h \
@@ -49,7 +51,9 @@ HEADERS += \
     StatusBar.h \
     OptionDialog.h \
     SearchDialog.h \
-    MiddleWidget.h
+    MiddleWidget.h \
+    InfoFrame.h \
+    DataFrame.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -38,6 +38,7 @@ void MainWidget::initMenu()
 
     fileMenu = new QMenu("文件(&F)",this);
     editMenu = new QMenu("编辑(&E)",this);
+    watchMenu = new QMenu("查看(&W)",this);
     helpMenu = new QMenu("帮助(&H)",this);
 
     fileMenu->addAction(openAct);
@@ -58,10 +59,14 @@ void MainWidget::initMenu()
     editMenu->addSeparator();
     editMenu->addAction(optionsAct);
 
+    watchMenu->addAction(infoAct);
+    watchMenu->addAction(dataAct);
+
     helpMenu->addAction(aboutAct);
 
     mainMenuBar->addMenu(fileMenu);
     mainMenuBar->addMenu(editMenu);
+    mainMenuBar->addMenu(watchMenu);
     mainMenuBar->addMenu(helpMenu);
 
 }
@@ -89,11 +94,23 @@ void MainWidget::initAction()
 
     undoAct = new QAction(QIcon(":/Source/image/undo.png"), "&Undo", this);
     undoAct->setShortcuts(QKeySequence::Undo);
-    connect(undoAct, &QAction::triggered, [=](){reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->undo();});
+    connect(undoAct, &QAction::triggered, [=]()
+    {
+        if(mainMiddleWidget->m_Tab->count() >= 1)
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->undo();
+        else
+            mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
+    });
 
     redoAct = new QAction(QIcon(":/Source/image/redo.png"), "&Redo", this);
     redoAct->setShortcuts(QKeySequence::Redo);
-    connect(redoAct, &QAction::triggered, [=](){reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->redo();});
+    connect(redoAct, &QAction::triggered, [=]()
+    {
+        if(mainMiddleWidget->m_Tab->count() >= 1)
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->redo();
+        else
+            mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
+    });
 
     saveSelectionReadable = new QAction("导出选中部分", this);
     connect(saveSelectionReadable,&QAction::triggered,this,&MainWidget::saveSelectionToReadableFile);
@@ -101,7 +118,7 @@ void MainWidget::initAction()
     aboutAct = new QAction(QIcon(":/Source/image/app.png"),"关于(&P)", this);
     connect(aboutAct,&QAction::triggered,[=]()
     {
-        QMessageBox::about(this, "关于 LinuxHex","遵循GPL协议的开源软件");
+        QMessageBox::about(this, "关于 LinuxHex","遵循GPL协议的开源软件\n\n作者: Bottod");
     });
 
     findAct = new QAction(QIcon(":/Source/image/find.png"), "&查找/替换", this);
@@ -118,6 +135,46 @@ void MainWidget::initAction()
 
     optionsAct = new QAction("选项(&O)", this);
     connect(optionsAct,&QAction::triggered, this, &MainWidget::showOptionDialog);
+
+    infoAct = new QAction("信息面板",this);
+    infoAct->setCheckable(true);
+    infoAct->setChecked(true);
+    connect(infoAct,&QAction::triggered,this,[=]()
+    {
+        if(infoWidget->isVisible())
+        {
+            infoAct->setChecked(false);
+            infoWidget->hide();
+            if(!dataWidget->isVisible())
+                leftFrame->hide();
+        }
+        else
+        {
+            infoAct->setChecked(true);
+            infoWidget->show();
+            leftFrame->show();
+        }
+    });
+
+    dataAct = new QAction("数据注释器",this);
+    dataAct->setCheckable(true);
+    dataAct->setChecked(true);
+    connect(dataAct,&QAction::triggered,[=]()
+    {
+        if(dataWidget->isVisible())
+        {
+            dataAct->setChecked(false);
+            dataWidget->hide();
+            if(!infoWidget->isVisible())
+                leftFrame->hide();
+        }
+        else
+        {
+            dataAct->setChecked(true);
+            dataWidget->show();
+            leftFrame->show();
+        }
+    });
 }
 
 void MainWidget::initOtherWidget()
@@ -153,8 +210,32 @@ void MainWidget::initOtherWidget()
     connect(mainTitleBar->closeBtn,&QPushButton::clicked,this,&MainWidget::close);
     connect(mainTitleBar->setBtn,&QPushButton::clicked,this,&MainWidget::showOptionDialog);
 
+    leftFrame = new QFrame(this);
+    leftFrame->setAutoFillBackground(true);
+    leftFrame->setFixedWidth(200);
+    infoWidget = new InfoFrame(this);
+    connect(infoWidget->m_CloseBtn,&QPushButton::clicked,[=]()
+    {
+        infoWidget->hide();
+        infoAct->setChecked(false);
+        if(!dataWidget->isVisible())
+        {
+            leftFrame->hide();
+        }
+    });
+    dataWidget = new DataFrame(this);
+    connect(dataWidget->m_CloseBtn,&QPushButton::clicked,[=]()
+    {
+        dataWidget->hide();
+        dataAct->setChecked(false);
+        if(!infoWidget->isVisible())
+        {
+            leftFrame->hide();
+        }
+    });
+
+
     mainMiddleWidget = new MiddleWidget(this);
-    mainMiddleWidget->setAutoFillBackground(true);
     connect(mainMiddleWidget->m_Tab,&QTabWidget::tabCloseRequested,this,&MainWidget::removeSubTab);
     connect(mainMiddleWidget->m_Tab,&QTabWidget::currentChanged,[=]()
     {
@@ -172,6 +253,9 @@ void MainWidget::initOtherWidget()
 
         //different widget can have differnt write mode
         //this->setOverwriteMode(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getOverWriteMode());
+
+        //first open a file have tabtext but don't have tabtooltip;
+        getFileInfo();
 
         QSettings settings;
         reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressArea(settings.value("AddressArea",true).toBool());
@@ -196,16 +280,26 @@ void MainWidget::initOtherWidget()
 
 void MainWidget::initLayout()
 {
-    mainLayout = new QVBoxLayout(this);
-
+    QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->setMargin(0);
     mainLayout->setSpacing(0);
-
     mainLayout->addWidget(mainTitleBar);
     mainLayout->addWidget(mainMenuBar);
-    mainLayout->addWidget(mainMiddleWidget);
-    mainLayout->addWidget(mainStatusBar);
 
+    QVBoxLayout *middleLeftLayout = new QVBoxLayout(leftFrame);
+    middleLeftLayout->setSpacing(0);
+    middleLeftLayout->setMargin(0);
+    middleLeftLayout->addWidget(infoWidget);
+    middleLeftLayout->addWidget(dataWidget);
+    middleLeftLayout->addStretch();
+    QHBoxLayout *middleLayout = new QHBoxLayout();
+    middleLayout->setSpacing(0);
+    middleLayout->setMargin(0);
+    middleLayout->addWidget(leftFrame);
+    middleLayout->addWidget(mainMiddleWidget);
+    mainLayout->addLayout(middleLayout);
+
+    mainLayout->addWidget(mainStatusBar);
     this->setLayout(mainLayout);
 }
 
@@ -318,6 +412,8 @@ void MainWidget::closeEvent(QCloseEvent *event)
                 break;
         }
     }
+    //no tip windows write
+    writeSettings();
 }
 void MainWidget::dragEnterEvent(QDragEnterEvent *event)
 {
@@ -420,9 +516,11 @@ void MainWidget::loadFile(const QString &fileName)
 
         QString strippedFileName = strippedName(fileName);
         mainMiddleWidget->m_Tab->insertTab(mainMiddleWidget->m_Tab->count(), hexEdit,strippedFileName);
+        //first open a file will final go here
         mainMiddleWidget->m_Tab->setTabToolTip(mainMiddleWidget->m_Tab->count()-1,fileName);
         mainMiddleWidget->m_Tab->setCurrentIndex(mainMiddleWidget->m_Tab->count()-1);
         file_list.append(fileName);
+        getFileInfo();
     }
     else
     {
@@ -459,11 +557,16 @@ bool MainWidget::save()
 
 bool MainWidget::saveAs()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("另存为"));
-    if (fileName.isEmpty())
-        return false;
+    if(mainMiddleWidget->m_Tab->count() >= 1)
+    {
+        QString fileName = QFileDialog::getSaveFileName(this, tr("另存为"));
+        if (fileName.isEmpty())
+            return false;
 
-    return saveFile(fileName);
+        return saveFile(fileName);
+    }
+    mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
+    return false;
 }
 
 bool MainWidget::saveFile(const QString &fileName)
@@ -524,38 +627,52 @@ bool MainWidget::saveFile(const QString &fileName)
 
 void MainWidget::saveToReadableFile()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "导出文件");
-    if (!fileName.isEmpty())
+    if(mainMiddleWidget->m_Tab->count() >= 1)
     {
-        QFile file(fileName);
-        if (!file.open(QFile::WriteOnly | QFile::Text))
+        QString fileName = QFileDialog::getSaveFileName(this, "导出文件");
+        if (!fileName.isEmpty())
         {
-            QMessageBox::warning(this, "LinuxHex", tr("导出文件失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
-            return;
-        }
-        this->setCursor(Qt::WaitCursor);
-        file.write(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->toReadableString().toUtf8());
-        this->setCursor(QCursor(Qt::ArrowCursor));
+            QFile file(fileName);
+            if (!file.open(QFile::WriteOnly | QFile::Text))
+            {
+                QMessageBox::warning(this, "LinuxHex", tr("导出文件失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
+                return;
+            }
+            this->setCursor(Qt::WaitCursor);
+            file.write(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->toReadableString().toUtf8());
+            this->setCursor(QCursor(Qt::ArrowCursor));
 
-        mainStatusBar->showMessage(tr("文件已保存!"), 2000);
+            mainStatusBar->showMessage(tr("文件已保存!"), 2000);
+        }
+    }
+    else
+    {
+        mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
     }
 }
 
 void MainWidget::saveSelectionToReadableFile()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("导出选中部分"));
-    if (!fileName.isEmpty())
+    if(mainMiddleWidget->m_Tab->count() >= 1)
     {
-        QFile file(fileName);
-        if (!file.open(QFile::WriteOnly | QFile::Text)) {
-            QMessageBox::warning(this, "LinuxHex", tr("导出选中部分失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
-            return;
-        }
-        this->setCursor(Qt::WaitCursor);
-        file.write(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->selectionToReadableString().toUtf8());
-        this->setCursor(QCursor(Qt::ArrowCursor));
+        QString fileName = QFileDialog::getSaveFileName(this, tr("导出选中部分"));
+        if (!fileName.isEmpty())
+        {
+            QFile file(fileName);
+            if (!file.open(QFile::WriteOnly | QFile::Text)) {
+                QMessageBox::warning(this, "LinuxHex", tr("导出选中部分失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
+                return;
+            }
+            this->setCursor(Qt::WaitCursor);
+            file.write(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->selectionToReadableString().toUtf8());
+            this->setCursor(QCursor(Qt::ArrowCursor));
 
-        mainStatusBar->showMessage(tr("文件已保存!"), 2000);
+            mainStatusBar->showMessage(tr("文件已保存!"), 2000);
+        }
+    }
+    else
+    {
+        mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
     }
 }
 
@@ -600,14 +717,24 @@ void MainWidget::showSearchDialog()
 
 void MainWidget::findNext()
 {
-    searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
-    searchDialog->findNext();
+    if(mainMiddleWidget->m_Tab->count() >= 1)
+    {
+        searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
+        searchDialog->findNext();
+    }
+    else
+        mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
 }
 
 void MainWidget::findPre()
 {
-    searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
-    searchDialog->findPre();
+    if(mainMiddleWidget->m_Tab->count() >= 1)
+    {
+        searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
+        searchDialog->findPre();
+    }
+    else
+        mainStatusBar->showMessage(tr("请至少打开一个文件!"), 2000);
 }
 
 void MainWidget::removeSubTab(int index)
@@ -625,3 +752,83 @@ QString MainWidget::strippedName(const QString &fullFileName)
 }
 
 
+QString MainWidget::humanReadableSize(const qint64 &size, int precision)
+{
+    double sizeAsDouble = size;
+    static QStringList measures;
+    if (measures.isEmpty())
+        measures << QCoreApplication::translate("QInstaller", "bytes")
+                 << QCoreApplication::translate("QInstaller", "KB")
+                 << QCoreApplication::translate("QInstaller", "MB")
+                 << QCoreApplication::translate("QInstaller", "GB")
+                 << QCoreApplication::translate("QInstaller", "TB")
+                 << QCoreApplication::translate("QInstaller", "PB")
+                 << QCoreApplication::translate("QInstaller", "EB")
+                 << QCoreApplication::translate("QInstaller", "ZB")
+                 << QCoreApplication::translate("QInstaller", "YB");
+    QStringListIterator it(measures);
+    QString measure(it.next());
+    while (sizeAsDouble >= 1024.0 && it.hasNext()) {
+        measure = it.next();
+        sizeAsDouble /= 1024.0;
+    }
+    return QString::fromLatin1("%1 %2").arg(sizeAsDouble, 0, 'f', precision).arg(measure);
+}
+
+void MainWidget::getFileInfo()
+{
+    if(mainMiddleWidget->m_Tab->count() >= 1)
+    {
+        QFileInfo fileinfo;
+        fileinfo.setFile(mainMiddleWidget->m_Tab->tabToolTip(mainMiddleWidget->m_Tab->currentIndex()));
+
+        QString fileinfo_str = "";
+        fileinfo_str += "名称: <font color='red'>";
+        fileinfo_str += strippedName(mainMiddleWidget->m_Tab->tabToolTip(mainMiddleWidget->m_Tab->currentIndex()));
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "大小: <font color='red'>";
+        fileinfo_str += humanReadableSize(fileinfo.size(),3);
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "创建时间: <br/><font color='red'>";
+        fileinfo_str += fileinfo.metadataChangeTime().toString("yyyy-MM-dd hh:mm:ss");
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "最后读时间: <br/><font color='red'>";
+        fileinfo_str += fileinfo.lastRead().toString("yyyy-MM-dd hh:mm:ss");
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "最后写时间: <br/><font color='red'>";
+        fileinfo_str += fileinfo.lastModified().toString("yyyy-MM-dd hh:mm:ss");
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "是否为符号链接: <font color='red'>";
+        if(fileinfo.isSymLink())
+            fileinfo_str += "是";
+        else
+            fileinfo_str += "否";
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "是否可读: <font color='red'>";
+        if(fileinfo.isReadable())
+            fileinfo_str += "是";
+        else
+            fileinfo_str += "否";
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "是否可写: <font color='red'>";
+        if(fileinfo.isWritable())
+            fileinfo_str += "是";
+        else
+            fileinfo_str += "否";
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "是否可执行: <font color='red'>";
+        if(fileinfo.isExecutable())
+            fileinfo_str += "是";
+        else
+            fileinfo_str += "否";
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "拥有者: <font color='red'>";
+        fileinfo_str += fileinfo.owner();
+        fileinfo_str += "</font><br/>";
+        fileinfo_str += "用户组: <font color='red'>";
+        fileinfo_str += fileinfo.group();
+        fileinfo_str += "</font><br/>";
+
+        infoWidget->setContent(fileinfo_str);
+    }
+}

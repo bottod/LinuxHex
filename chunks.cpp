@@ -86,9 +86,9 @@ QByteArray Chunks::data(qint64 pos, qint64 maxSize, QByteArray *highlighted)
                 chunkIdx += 1;
                 qint64 count;
                 qint64 chunkOfs = pos - chunk.absPos;
-                if (maxSize > ((qint64)chunk.data.size() - chunkOfs))
+                if (maxSize > (static_cast<qint64>(chunk.data.size()) - chunkOfs))
                 {
-                    count = (qint64)chunk.data.size() - chunkOfs;
+                    count = static_cast<qint64>(chunk.data.size()) - chunkOfs;
                     ioDelta += CHUNK_SIZE - chunk.data.size();
                 }
                 else

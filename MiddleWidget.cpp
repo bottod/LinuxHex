@@ -4,6 +4,7 @@ MiddleWidget::MiddleWidget(QWidget *parent)
     : QWidget (parent)
 {
     init();
+    setAutoFillBackground(true);
 }
 
 
@@ -11,6 +12,8 @@ void MiddleWidget::init()
 {
     m_Tab = new QTabWidget(this);
     QVBoxLayout *main_layout = new QVBoxLayout(this);
+    main_layout->setSpacing(0);
+    main_layout->setMargin(0);
     main_layout->addWidget(m_Tab);
 
 //    use qss to hide a blank tab

@@ -18,5 +18,7 @@
         <file>Source/image/minimum_hover.png</file>
         <file>Source/image/set.png</file>
         <file>Source/image/set_hover.png</file>
+        <file>Source/image/child_close.png</file>
+        <file>Source/image/child_close_hover.png</file>
     </qresource>
 </RCC>

@@ -1,6 +1,8 @@
 #include "MainWidget.h"
 #include <QApplication>
 
+#include "InfoFrame.h"
+
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
