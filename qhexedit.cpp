@@ -820,6 +820,14 @@ void QHexEdit::mousePressEvent(QMouseEvent * event)
         resetSelection(cPos);
         setCursorPosition(cPos);
     }
+    if(event->button() == Qt::RightButton && event->x() < _pxPosHexX)
+    {
+        if(_addrmode == 10)
+            _addrmode = 16;
+        else if(_addrmode == 16)
+            _addrmode = 10;
+        update();
+    }
 }
 
 void QHexEdit::paintEvent(QPaintEvent *event)
@@ -850,7 +858,7 @@ void QHexEdit::paintEvent(QPaintEvent *event)
             QString address;
             for (int row=0, pxPosY = _pxCharHeight; row <= (_dataShown.size()/_bytesPerLine); row++, pxPosY +=_pxCharHeight)
             {
-                address = QString("%1").arg(_bPosFirst + row*_bytesPerLine + _addressOffset, _addrDigits, 16, QChar('0'));
+                address = QString("%1").arg(_bPosFirst + row*_bytesPerLine + _addressOffset, _addrDigits, _addrmode, QChar('0'));
                 painter.drawText(_pxPosAdrX - pxOfsX, pxPosY, address);
             }
         }

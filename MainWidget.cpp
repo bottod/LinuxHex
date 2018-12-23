@@ -239,38 +239,41 @@ void MainWidget::initOtherWidget()
     connect(mainMiddleWidget->m_Tab,&QTabWidget::tabCloseRequested,this,&MainWidget::removeSubTab);
     connect(mainMiddleWidget->m_Tab,&QTabWidget::currentChanged,[=]()
     {
-        searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
-        bool isSaved = !(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->isModified());
-        int index = mainMiddleWidget->m_Tab->currentIndex();
+        if(mainMiddleWidget->m_Tab->count() > 0)
+        {
+            searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
+            bool isSaved = !(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->isModified());
+            int index = mainMiddleWidget->m_Tab->currentIndex();
 
-        if(isSaved)
-            mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
-        else
-            mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+            if(isSaved)
+                mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+            else
+                mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
 
-        mainStatusBar->setSize(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getLastEventSize());
-        mainStatusBar->setAddress(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getPosCurrent());
+            mainStatusBar->setSize(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getLastEventSize());
+            mainStatusBar->setAddress(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getPosCurrent());
 
-        //different widget can have differnt write mode
-        //this->setOverwriteMode(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getOverWriteMode());
+            //different widget can have differnt write mode
+            //this->setOverwriteMode(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getOverWriteMode());
 
-        //first open a file have tabtext but don't have tabtooltip;
-        getFileInfo();
+            //first open a file have tabtext but don't have tabtooltip;
+            getFileInfo();
 
-        QSettings settings;
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressArea(settings.value("AddressArea",true).toBool());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAsciiArea(settings.value("AsciiArea",true).toBool());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlighting(settings.value("Highlighting",true).toBool());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setOverwriteMode(settings.value("OverwriteMode",true).toBool());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setReadOnly(settings.value("ReadOnly",false).toBool());
+            QSettings settings;
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressArea(settings.value("AddressArea",true).toBool());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAsciiArea(settings.value("AsciiArea",true).toBool());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlighting(settings.value("Highlighting",true).toBool());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setOverwriteMode(settings.value("OverwriteMode",true).toBool());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setReadOnly(settings.value("ReadOnly",false).toBool());
 
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlightingColor(settings.value("HighlightingColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressAreaColor(settings.value("AddressAreaColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setSelectionColor(settings.value("SelectionColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setFont(settings.value("WidgetFont",QFont("Monospace", 10)).value<QFont>());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setHighlightingColor(settings.value("HighlightingColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressAreaColor(settings.value("AddressAreaColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setSelectionColor(settings.value("SelectionColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setFont(settings.value("WidgetFont",QFont("Monospace", 10)).value<QFont>());
 
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressWidth(settings.value("AddressAreaWidth",4).toInt());
-        reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setBytesPerLine(settings.value("BytesPerLine",16).toInt());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressWidth(settings.value("AddressAreaWidth",4).toInt());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setBytesPerLine(settings.value("BytesPerLine",16).toInt());
+        }
     });
 
     mainStatusBar = new StatusBar(this);
@@ -739,11 +742,10 @@ void MainWidget::findPre()
 
 void MainWidget::removeSubTab(int index)
 {
-    if(mainMiddleWidget->m_Tab->count() > 1)
-    {
         file_list.removeOne(mainMiddleWidget->m_Tab->tabToolTip(index));
         mainMiddleWidget->m_Tab->removeTab(index);
-    }
+        //**the same,so don't use delete
+        //delete mainMiddleWidget->m_Tab->widget(index);
 }
 
 QString MainWidget::strippedName(const QString &fullFileName)

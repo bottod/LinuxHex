@@ -90,18 +90,22 @@ void SearchDialog::init()
 
 qint64 SearchDialog::findR()
 {
-    qint64 from = _hexEdit->cursorPosition() / 2;
-    _findBa = getContent(find_ComboBox->currentIndex(), find_ContentBox->currentText());
-    qint64 idx = -1;
-
-    if (_findBa.length() > 0)
+    if(_hexEdit != nullptr)
     {
-        if (pre_Check->isChecked())
-            idx = _hexEdit->lastIndexOf(_findBa, from);
-        else
-            idx = _hexEdit->indexOf(_findBa, from);
+        qint64 from = _hexEdit->cursorPosition() / 2;
+        _findBa = getContent(find_ComboBox->currentIndex(), find_ContentBox->currentText());
+        qint64 idx = -1;
+
+        if (_findBa.length() > 0)
+        {
+            if (pre_Check->isChecked())
+                idx = _hexEdit->lastIndexOf(_findBa, from);
+            else
+                idx = _hexEdit->indexOf(_findBa, from);
+        }
+        return idx;
     }
-    return idx;
+    return -1; //no hexedit
 }
 
 qint64 SearchDialog::findNext()
@@ -132,37 +136,43 @@ qint64 SearchDialog::findPre()
 
 void SearchDialog::replace()
 {
-    qint64 idx = findNext();
-    if (idx >= 0)
+    if(_hexEdit != nullptr)
     {
-        QByteArray replaceBa = getContent(replace_ComboBox->currentIndex(), replace_ContentBox->currentText());
-        replaceOccurrence(idx, replaceBa);
+        qint64 idx = findNext();
+        if (idx >= 0)
+        {
+            QByteArray replaceBa = getContent(replace_ComboBox->currentIndex(), replace_ContentBox->currentText());
+            replaceOccurrence(idx, replaceBa);
+        }
     }
 }
 
 void SearchDialog::replaceAll()
 {
-    qint64 replaceCounter = 0;
-    qint64 idx = 0;
-    qint64 goOn = QMessageBox::Yes;
-
-    while ((idx >= 0) && (goOn == QMessageBox::Yes))
+    if(_hexEdit != nullptr)
     {
-        idx = findNext();
-        if (idx >= 0)
+        qint64 replaceCounter = 0;
+        qint64 idx = 0;
+        qint64 goOn = QMessageBox::Yes;
+
+        while ((idx >= 0) && (goOn == QMessageBox::Yes))
         {
-            QByteArray replaceBa = getContent(replace_ComboBox->currentIndex(), replace_ContentBox->currentText());
-            qint64 result = replaceOccurrence(idx, replaceBa);
+            idx = findNext();
+            if (idx >= 0)
+            {
+                QByteArray replaceBa = getContent(replace_ComboBox->currentIndex(), replace_ContentBox->currentText());
+                qint64 result = replaceOccurrence(idx, replaceBa);
 
-            if (result == QMessageBox::Yes)
-                replaceCounter += 1;
+                if (result == QMessageBox::Yes)
+                    replaceCounter += 1;
 
-            if (result == QMessageBox::Cancel)
-                goOn = result;
+                if (result == QMessageBox::Cancel)
+                    goOn = result;
+            }
         }
+        if (replaceCounter > 0)
+            QMessageBox::information(this, tr("LinuxHex"), QString(tr("替换了 %1 处")).arg(replaceCounter));
     }
-    if (replaceCounter > 0)
-        QMessageBox::information(this, tr("LinuxHex"), QString(tr("替换了 %1 处")).arg(replaceCounter));
 }
 
 void SearchDialog::setHexEdit(QHexEdit *hex_edit)
