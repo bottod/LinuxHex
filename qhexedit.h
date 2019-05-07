@@ -4,6 +4,7 @@
 #include <QAbstractScrollArea>
 #include <QPen>
 #include <QBrush>
+#include <QTextCodec>
 
 #include "chunks.h"
 #include "commands.h"
@@ -330,6 +331,8 @@ public:
     QColor selectionColor();
     void setSelectionColor(const QColor &color);
 
+    void setTwoLineColor(bool var);
+
 protected:
     // Handle events
     void keyPressEvent(QKeyEvent *event);
@@ -350,6 +353,7 @@ private:
     void init();
     void readBuffers();
     QString toReadable(const QByteArray &ba);
+    char SysConvert(int sysMode);
 
 private slots:
     void adjust();                              // recalc pixel positions
@@ -397,6 +401,7 @@ private:
     bool _hexCaps;
     bool _dynamicBytesPerLine;
 
+    bool _twolinecolor;                         //斑马纹
     // other variables
     bool _editAreaIsAscii;                      // flag about the ascii mode edited
     int _addrmode = 16;                              //16mode 10mode
@@ -409,6 +414,7 @@ private:
     QRect _cursorRect;                          // physical dimensions of cursor
     QByteArray _data;                           // QHexEdit's data, when setup with QByteArray
     QByteArray _dataShown;                      // data in the current View
+    QString _dataShown_str;                     // data utf8  support chinese
     QByteArray _hexDataShown;                   // data in view, transformed to hex
     qint64 _lastEventSize;                      // size, which was emitted last time
     QByteArray _markedShown;                    // marked data in view

@@ -20,7 +20,11 @@
 #include "SearchDialog.h"
 #include "qhexedit.h"
 #include "InfoFrame.h"
-#include "DataFrame.h"
+#include "GdbWidget.h"
+#include "SerialWidget.h"
+#include "GdbSetWidget.h"
+
+#include "CheckFileThread.h"
 
 //Bug List:
 //1. the frameless window can't move out the real screen window {[Windows(N)   Linux(Y)]    system bug?(seem yes)}
@@ -51,6 +55,7 @@ private:
     QMenu *fileMenu;
     QMenu *editMenu;
     QMenu *watchMenu;
+    QMenu *setMenu;
     QMenu *helpMenu;
 
     //for fileMenu
@@ -71,7 +76,12 @@ private:
 
     //for watchMenu
     QAction *infoAct;
-    QAction *dataAct;
+    QAction *twolineAct;//斑马纹
+
+    //for setMenu
+    QAction *debugAct;
+    QAction *gdbWinAct;
+    QAction *serialWinAct;
 
     //bytes to kb...
     QString humanReadableSize(const qint64 &size, int precision);//change byte kb mb
@@ -83,7 +93,6 @@ private:
     TitleBar *mainTitleBar;
 
     InfoFrame *infoWidget;
-    DataFrame *dataWidget;
     QFrame *leftFrame;
 
     //middleWidget
@@ -95,6 +104,9 @@ private:
     //set dialog
     OptionDialog *optionDialog;
     SearchDialog *searchDialog;
+    GdbWidget *gdbWidget;
+    SerialWidget *serialWidget;
+    GdbSetWidget *gdbSetWidget;
 
     void initSystemTray();
     void initOtherWidget();
@@ -105,6 +117,8 @@ private:
     void init();
 
     void getFileInfo();//get current file info;
+
+    CheckFileThread *check_thread;
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -119,7 +133,9 @@ private:
 
 private:
     void openFile();
+public:
     void loadFile(const QString& fileName);
+private:
     void setTitleFileName(const QString fileName);
 
     bool save();
@@ -134,6 +150,12 @@ private:
     void showOptionDialog();
     void showSearchDialog();
 
+    void showGdbSetDialog();
+    void showGdbDialog();
+    void showserialDialog();
+
+    void checkDumpFile(QString dumpfilename);
+
 private slots:
     void findNext();
     void findPre();
@@ -142,11 +164,20 @@ private slots:
 public slots:
     void optionAccept();
     void removeSubTab(int index);
+    void recv_info(QString GdbPath, QString Host, QString Port);
 
 private:
     QString strippedName(const QString &fullFileName);
 
     QStringList file_list;
+
+    QString gdb_path;
+    QString gdb_path_pre;
+    QString hostname;
+    QString portnum;
+
+public:
+    void openDum(QString str);
 
 };
 

@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT       += serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -38,7 +39,12 @@ SOURCES += \
     SearchDialog.cpp \
     MiddleWidget.cpp \
     InfoFrame.cpp \
-    DataFrame.cpp
+    GdbWidget.cpp \
+    SerialWidget.cpp \
+    GdbSetWidget.cpp \
+    DumpWidget.cpp \
+    CheckFileThread.cpp \
+    RestoreWidget.cpp
 
 HEADERS += \
         MainWidget.h \
@@ -53,7 +59,12 @@ HEADERS += \
     SearchDialog.h \
     MiddleWidget.h \
     InfoFrame.h \
-    DataFrame.h
+    GdbWidget.h \
+    SerialWidget.h \
+    GdbSetWidget.h \
+    DumpWidget.h \
+    CheckFileThread.h \
+    RestoreWidget.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -62,3 +73,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     res.qrc
+
+FORMS += \
+    GdbWidget.ui \
+    SerialWidget.ui \
+    GdbSetWidget.ui \
+    DumpWidget.ui \
+    RestoreWidget.ui

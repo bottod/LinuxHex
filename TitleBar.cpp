@@ -32,7 +32,7 @@ void TitleBar::initTitle()
 
     NameLabel = new QLabel(this);
     NameLabel->setFixedHeight(20);
-    NameLabel->setText("* - LinuxHex");
+    NameLabel->setText("* - Debug Tool");
     NameLabel->setStyleSheet("QLabel{color:rgb(255,255,255);\
                              font:bold;}");
 

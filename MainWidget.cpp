@@ -20,7 +20,7 @@ void MainWidget::initSystemTray()
     m_TrayMenu = new TrayIconMenu(this);
 
     m_SystemTray->setContextMenu(m_TrayMenu);
-    m_SystemTray->setToolTip("LinuxHex");
+    m_SystemTray->setToolTip("Debug Tool");
     m_SystemTray->setIcon(QIcon(":/Source/image/app.png"));
 
     m_SystemTray->show();
@@ -39,6 +39,7 @@ void MainWidget::initMenu()
     fileMenu = new QMenu("文件(&F)",this);
     editMenu = new QMenu("编辑(&E)",this);
     watchMenu = new QMenu("查看(&W)",this);
+    setMenu = new QMenu("设置(&S)",this);
     helpMenu = new QMenu("帮助(&H)",this);
 
     fileMenu->addAction(openAct);
@@ -60,13 +61,18 @@ void MainWidget::initMenu()
     editMenu->addAction(optionsAct);
 
     watchMenu->addAction(infoAct);
-    watchMenu->addAction(dataAct);
+    watchMenu->addAction(twolineAct);
+
+    setMenu->addAction(debugAct);
+    setMenu->addAction(gdbWinAct);
+    setMenu->addAction(serialWinAct);
 
     helpMenu->addAction(aboutAct);
 
     mainMenuBar->addMenu(fileMenu);
     mainMenuBar->addMenu(editMenu);
     mainMenuBar->addMenu(watchMenu);
+    mainMenuBar->addMenu(setMenu);
     mainMenuBar->addMenu(helpMenu);
 
 }
@@ -118,7 +124,7 @@ void MainWidget::initAction()
     aboutAct = new QAction(QIcon(":/Source/image/app.png"),"关于(&P)", this);
     connect(aboutAct,&QAction::triggered,[=]()
     {
-        QMessageBox::about(this, "关于 LinuxHex","遵循GPL协议的开源软件\n\n作者: Bottod");
+        QMessageBox::about(this, "关于 Debug Tool","作者: Bottod");
     });
 
     findAct = new QAction(QIcon(":/Source/image/find.png"), "&查找/替换", this);
@@ -145,8 +151,7 @@ void MainWidget::initAction()
         {
             infoAct->setChecked(false);
             infoWidget->hide();
-            if(!dataWidget->isVisible())
-                leftFrame->hide();
+            leftFrame->hide();
         }
         else
         {
@@ -156,25 +161,33 @@ void MainWidget::initAction()
         }
     });
 
-    dataAct = new QAction("数据注释器",this);
-    dataAct->setCheckable(true);
-    dataAct->setChecked(true);
-    connect(dataAct,&QAction::triggered,[=]()
+
+    twolineAct = new QAction("斑马纹",this);
+    twolineAct->setCheckable(true);
+    twolineAct->setChecked(true);
+    connect(twolineAct,&QAction::triggered,[=]()
     {
-        if(dataWidget->isVisible())
+        //按下时(triggered时)已经改变状态了
+        if(twolineAct->isChecked())
         {
-            dataAct->setChecked(false);
-            dataWidget->hide();
-            if(!infoWidget->isVisible())
-                leftFrame->hide();
+            if(mainMiddleWidget->m_Tab->count() > 0)
+                reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setTwoLineColor(twolineAct->isChecked());//斑马纹
         }
         else
         {
-            dataAct->setChecked(true);
-            dataWidget->show();
-            leftFrame->show();
+            if(mainMiddleWidget->m_Tab->count() > 0)
+                reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setTwoLineColor(twolineAct->isChecked());//斑马纹
         }
     });
+
+    debugAct = new QAction("调试设置",this);
+    connect(debugAct,&QAction::triggered,this,&MainWidget::showGdbSetDialog);
+
+    gdbWinAct = new QAction("GDB调试",this);
+    connect(gdbWinAct,&QAction::triggered,this,&MainWidget::showGdbDialog);
+
+    serialWinAct = new QAction("串口调试",this);
+    connect(serialWinAct,&QAction::triggered,this,&MainWidget::showserialDialog);
 }
 
 void MainWidget::initOtherWidget()
@@ -183,6 +196,14 @@ void MainWidget::initOtherWidget()
     connect(optionDialog, &OptionDialog::accepted, this, &MainWidget::optionAccept);
 
     searchDialog = new SearchDialog(this);
+    serialWidget = new SerialWidget(this);
+    gdb_path = "gdb";//default path
+    gdb_path_pre = gdb_path;
+    gdbWidget = new GdbWidget(gdb_path,this);
+    connect(gdbWidget,&GdbWidget::dumpingNow,this,&MainWidget::checkDumpFile);
+
+    gdbSetWidget = new GdbSetWidget(this);
+    connect(gdbSetWidget,&GdbSetWidget::send_config,this,&MainWidget::recv_info);
 
     mainTitleBar = new TitleBar(this);
     connect(mainTitleBar->minimumBtn,&QPushButton::clicked,this,&MainWidget::showMinimized);
@@ -218,21 +239,10 @@ void MainWidget::initOtherWidget()
     {
         infoWidget->hide();
         infoAct->setChecked(false);
-        if(!dataWidget->isVisible())
-        {
-            leftFrame->hide();
-        }
+        leftFrame->hide();
+
     });
-    dataWidget = new DataFrame(this);
-    connect(dataWidget->m_CloseBtn,&QPushButton::clicked,[=]()
-    {
-        dataWidget->hide();
-        dataAct->setChecked(false);
-        if(!infoWidget->isVisible())
-        {
-            leftFrame->hide();
-        }
-    });
+
 
 
     mainMiddleWidget = new MiddleWidget(this);
@@ -246,9 +256,9 @@ void MainWidget::initOtherWidget()
             int index = mainMiddleWidget->m_Tab->currentIndex();
 
             if(isSaved)
-                mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+                mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - Debug Tool");
             else
-                mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+                mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - Debug Tool");
 
             mainStatusBar->setSize(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getLastEventSize());
             mainStatusBar->setAddress(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->getPosCurrent());
@@ -270,9 +280,26 @@ void MainWidget::initOtherWidget()
             reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressAreaColor(settings.value("AddressAreaColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
             reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setSelectionColor(settings.value("SelectionColor",QColor(0xff, 0xff, 0x99, 0xff)).value<QColor>());
             reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setFont(settings.value("WidgetFont",QFont("Monospace", 10)).value<QFont>());
+            reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setTwoLineColor(twolineAct->isChecked());//斑马纹
 
             reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setAddressWidth(settings.value("AddressAreaWidth",4).toInt());
             reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setBytesPerLine(settings.value("BytesPerLine",16).toInt());
+        }
+        else
+        {
+            infoWidget->setContent(
+R"(名称:
+大小:
+创建时间:
+最后读时间:
+最后写时间:
+是否为符号链接:
+是否可读:
+是否可写:
+是否可执行:
+拥有者:
+用户组:
+)");
         }
     });
 
@@ -293,7 +320,6 @@ void MainWidget::initLayout()
     middleLeftLayout->setSpacing(0);
     middleLeftLayout->setMargin(0);
     middleLeftLayout->addWidget(infoWidget);
-    middleLeftLayout->addWidget(dataWidget);
     middleLeftLayout->addStretch();
     QHBoxLayout *middleLayout = new QHBoxLayout();
     middleLayout->setSpacing(0);
@@ -502,12 +528,12 @@ void MainWidget::loadFile(const QString &fileName)
 {
     if(!file_list.contains(fileName))
     {
-        QFile *file = new QFile(this);
-        file->setFileName(fileName);
         QHexEdit *hexEdit = new QHexEdit();
+        QFile *file = new QFile(hexEdit);
+        file->setFileName(fileName);
         if (!hexEdit->setData(*file))
         {
-            QMessageBox::warning(this, tr("LinuxHex"),tr("Cannot read file %1:\n%2.").arg(fileName).arg(file->errorString()));
+            QMessageBox::warning(this, tr("Debug Tool"),tr("Cannot read file %1:\n%2.").arg(fileName).arg(file->errorString()));
             return;
         }
         mainStatusBar->showMessage("文件打开成功!",2000);
@@ -543,9 +569,9 @@ void MainWidget::setTitleFileName(const QString fileName)
     QString strippedFileName = strippedName(fileName);
 
     if (fileName.isEmpty())
-        mainTitleBar->setTitle("* - LinuxHex");
+        mainTitleBar->setTitle("* - Debug Tool");
     else
-        mainTitleBar->setTitle(strippedFileName + " - LinuxHex");
+        mainTitleBar->setTitle(strippedFileName + " - Debug Tool");
 }
 
 bool MainWidget::save()
@@ -589,7 +615,7 @@ bool MainWidget::saveFile(const QString &fileName)
             if(!ok)
             {
                 this->setCursor(QCursor(Qt::ArrowCursor));
-                QMessageBox::warning(this, tr("LinuxHex"), tr("保存文件失败 %1.").arg(fileName));
+                QMessageBox::warning(this, tr("Debug Tool"), tr("保存文件失败 %1.").arg(fileName));
                 return false;
             }
         }
@@ -602,14 +628,14 @@ bool MainWidget::saveFile(const QString &fileName)
             if(!ok)
             {
                 this->setCursor(QCursor(Qt::ArrowCursor));
-                QMessageBox::warning(this, tr("LinuxHex"), tr("保存文件失败 %1.").arg(fileName));
+                QMessageBox::warning(this, tr("Debug Tool"), tr("保存文件失败 %1.").arg(fileName));
                 return false;
             }
         }
         else
         {
             this->setCursor(QCursor(Qt::ArrowCursor));
-            QMessageBox::warning(this, tr("LinuxHex"), tr("保存文件失败 %1.").arg(fileName));
+            QMessageBox::warning(this, tr("Debug Tool"), tr("保存文件失败 %1.").arg(fileName));
             return false;
         }
 
@@ -617,13 +643,13 @@ bool MainWidget::saveFile(const QString &fileName)
         mainStatusBar->showMessage(tr("文件已保存!"), 2000);
         reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget())->setModified(false);
         int index = mainMiddleWidget->m_Tab->currentIndex();
-        mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+        mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - Debug Tool");
         return true;
     }
     else
     {
         this->setCursor(QCursor(Qt::ArrowCursor));
-        QMessageBox::warning(this, tr("LinuxHex"), tr("保存文件失败 %1.").arg(fileName));
+        QMessageBox::warning(this, tr("Debug Tool"), tr("保存文件失败 %1.").arg(fileName));
         return false;
     }
 }
@@ -638,7 +664,7 @@ void MainWidget::saveToReadableFile()
             QFile file(fileName);
             if (!file.open(QFile::WriteOnly | QFile::Text))
             {
-                QMessageBox::warning(this, "LinuxHex", tr("导出文件失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
+                QMessageBox::warning(this, "Debug Tool", tr("导出文件失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
                 return;
             }
             this->setCursor(Qt::WaitCursor);
@@ -663,7 +689,7 @@ void MainWidget::saveSelectionToReadableFile()
         {
             QFile file(fileName);
             if (!file.open(QFile::WriteOnly | QFile::Text)) {
-                QMessageBox::warning(this, "LinuxHex", tr("导出选中部分失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
+                QMessageBox::warning(this, "Debug Tool", tr("导出选中部分失败 %1:\n%2.").arg(fileName).arg(file.errorString()));
                 return;
             }
             this->setCursor(Qt::WaitCursor);
@@ -696,9 +722,9 @@ void MainWidget::dataChanged()
     int index = mainMiddleWidget->m_Tab->currentIndex();
 
     if(isSaved)
-        mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+        mainTitleBar->setTitle(mainMiddleWidget->m_Tab->tabText(index) + " - Debug Tool");
     else
-        mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - LinuxHex");
+        mainTitleBar->setTitle("*" + mainMiddleWidget->m_Tab->tabText(index) + " - Debug Tool");
 }
 
 void MainWidget::optionAccept()
@@ -707,15 +733,50 @@ void MainWidget::optionAccept()
     readSettings();
 }
 
+void MainWidget::recv_info(QString GdbPath, QString Host, QString Port)
+{
+    gdb_path = GdbPath;
+    hostname = Host;
+    portnum = Port;
+
+    if(gdb_path != gdb_path_pre)
+    {
+        gdbWidget->setGdbPath(gdb_path);
+        gdb_path_pre = gdb_path;
+    }
+
+    gdbWidget->setInfo(hostname,portnum);
+}
+
 void MainWidget::showOptionDialog()
 {
     optionDialog->show();
+}
+
+void MainWidget::showGdbSetDialog()
+{
+    gdbSetWidget->show();
 }
 
 void MainWidget::showSearchDialog()
 {
     searchDialog->setHexEdit(reinterpret_cast<QHexEdit*>(mainMiddleWidget->m_Tab->currentWidget()));
     searchDialog->show();
+}
+
+void MainWidget::showGdbDialog()
+{
+    if(gdb_path != gdb_path_pre)
+    {
+        gdbWidget->setGdbPath(gdb_path);
+        gdb_path_pre = gdb_path;
+    }
+    gdbWidget->show();
+}
+
+void MainWidget::showserialDialog()
+{
+    serialWidget->show();
 }
 
 void MainWidget::findNext()
@@ -779,7 +840,7 @@ QString MainWidget::humanReadableSize(const qint64 &size, int precision)
 
 void MainWidget::getFileInfo()
 {
-    if(mainMiddleWidget->m_Tab->count() >= 1)
+    if(mainMiddleWidget->m_Tab->count() >= 0)
     {
         QFileInfo fileinfo;
         fileinfo.setFile(mainMiddleWidget->m_Tab->tabToolTip(mainMiddleWidget->m_Tab->currentIndex()));
@@ -833,4 +894,19 @@ void MainWidget::getFileInfo()
 
         infoWidget->setContent(fileinfo_str);
     }
+}
+
+void MainWidget::checkDumpFile(QString dumpfilename)
+{
+    check_thread = new CheckFileThread(dumpfilename);
+    connect(check_thread,&CheckFileThread::fileExist,this, &MainWidget::openDum);
+
+    check_thread->start();
+}
+
+void MainWidget::openDum(QString str)
+{
+    loadFile(str);
+    if(check_thread->isFinished())
+        check_thread->exit();
 }
